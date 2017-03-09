@@ -21,30 +21,31 @@ import random
 # Accept connections, read incoming data, and answer back an HTML page
 #  (in an infinite loop)
 
+mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# Let the port be reused if no process is actually using it
+mySocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+# Bind to the address corresponding to the main name of the host
+mySocket.bind(('localhost', 1234))
+# Queue a maximum of 5 TCP connection requests
+mySocket.listen(5)
+
 try:
     while True:
-
-        mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # Let the port be reused if no process is actually using it
-        mySocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        # Bind to the address corresponding to the main name of the host
-        mySocket.bind(('localhost', 1234))
-        # Queue a maximum of 5 TCP connection requests
-        mySocket.listen(5)
 
         print ('Waiting for connections')
         (recvSocket, address) = mySocket.accept()
         print ('HTTP request received:')
-        print (recvSocket.recv(1024))
+        peticion = recvSocket.recv(2048).decode("utf-8")
+        print(peticion)
         randomInt = random.randint(1,99999999)
         urlredirect = "http://localhost:1234/" + str(randomInt)
         recvSocket.send(bytes("HTTP/1.1 301 \r\n\r\n" +
                         "<html><meta http-equiv= 'Refresh'" +
-                        "content='3;url='" + urlredirect + # <meta http-equiv="Refresh" content="10;url=http://www.dominio.com">
-                        "><body<p>Hemos cambiado de direccion. En 3 segundos enlazaras a la nueva pagina: " +
+                        "content='3;url=" + urlredirect + # <meta http-equiv="Refresh" content="10;url=http://www.dominio.com">
+                        "'><body><p>Hemos cambiado de direccion. En 3 segundos enlazaras a la nueva pagina: " +
                         urlredirect + ". En caso contrario, pulsa en el " +
                         "<a href=" + urlredirect + ">siguiente enlace.</a></p></body></html>\r\n","utf-8"))
-        mySocket.close()
+        recvSocket.close()
 
 except KeyboardInterrupt:
     print ("\nClosing binded socket")
